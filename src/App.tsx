@@ -1,4 +1,4 @@
-import { Header } from './components/header';
+import { Header } from './components/header'; // Certifique-se do case correto
 import { Post } from './components/Post';
 import { Sidebar } from './components/sidebar';
 
@@ -6,7 +6,22 @@ import styles from './App.module.css';
 
 import './global.css';
 
-const posts = [
+
+interface PostProps {
+  id: number;
+  author: {
+    avatarUrl: string;
+    name: string;
+    role: string;
+  };
+  content: {
+    type: 'paragraph' | 'link';
+    content: string;
+  }[];
+  publishedAt: Date;
+}
+
+const posts: PostProps[] = [
   {
     id: 1,
     author: {

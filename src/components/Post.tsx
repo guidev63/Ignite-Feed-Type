@@ -1,44 +1,75 @@
-import { format, formatDistanceToNow } from "date-fns";
-import styles from "./Post.module.css";
-import { Comment } from "./Comment";
-import { Avatar } from "./Avatar";
-import { useState } from "react";
+import { format, formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale'; // Importação correta
+import styles from './Post.module.css';
+import { Comment } from './Comment';
+import { Avatar } from './Avatar';
+import { FormEvent, useState, ChangeEvent, InvalidEvent } from 'react';
 
-// estado = variáveis que eu quero que o componente monitore
-export function Post({ author, publishedAt, content }) {
-  const [comments, setComments] = useState(["Post muito bacana, hein?!"]);
-  const [newCommentText, setNewCommentText] = useState("");
+// Definição das interfaces
+interface Author {
+  name: string;
+  role: string;
+  avatarUrl: string;
+}
 
-  const publishedDateFormatted = new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(publishedAt);
+interface Content {
+  type: 'paragraph' | 'link';
+  content: string;
+}
 
-  function handleCreateNewComment(event) {
+interface PostProps {
+  author: Author;
+  publishedAt: Date;
+  content: Content[];
+}
+
+export function Post({ author, publishedAt, content }: PostProps) {
+  const [comments, setComments] = useState(['Post muito bacana, hein?!']);
+  const [newCommentText, setNewCommentText] = useState('');
+
+  // Formatação de datas
+  const publishedDateFormatted = format(
+    publishedAt,
+    "d 'de' LLLL 'às' HH:mm'h'",
+    { locale: ptBR }
+  );
+
+  const publishedDateRelativeToNow = formatDistanceToNow(publishedAt, {
+    locale: ptBR,
+    addSuffix: true,
+  });
+
+  // Função para criar novos comentários
+  function handleCreateNewComment(event: FormEvent) {
     event.preventDefault();
-    setComments([...comments, newCommentText]);
-    setNewCommentText("");
+    setComments((prevComments) => [...prevComments, newCommentText]);
+    setNewCommentText('');
   }
 
-  function deleteComment(commentToDelete) {
+  // Função para deletar comentários
+  function deleteComment(commentToDelete: string) {
     const commentsWithoutDeletedOne = comments.filter(
       (comment) => comment !== commentToDelete
     );
     setComments(commentsWithoutDeletedOne);
   }
 
-  function handleCreateNewCommentChange(event) {
-    event.target.setCustomValidity("");
+  // Atualização do texto do comentário
+  function handleCreateNewCommentChange(
+    event: ChangeEvent<HTMLTextAreaElement>
+  ) {
+    event.target.setCustomValidity('');
     setNewCommentText(event.target.value);
   }
 
-  function handleCreateNewCommentInvalid(event) {
-    event.target.setCustomValidity("Esse campo é obrigatório!");
+  // Mensagem personalizada para campo inválido
+  function handleCreateNewCommentInvalid(
+    event: InvalidEvent<HTMLTextAreaElement>
+  ) {
+    event.target.setCustomValidity('Esse campo é obrigatório!');
   }
 
-  const isNewCommentEmpty = newCommentText.length === 0;
+  const isNewCommentEmpty = newCommentText.trim().length === 0;
 
   return (
     <article className={styles.post}>
@@ -50,22 +81,26 @@ export function Post({ author, publishedAt, content }) {
             <span>{author.role}</span>
           </div>
         </div>
-        <time title="08 de maio às 08:13h" dateTime="2022-05-11T08:13:30">
-          {publishedDateFormatted}
+        <time
+          title={publishedDateFormatted}
+          dateTime={publishedAt.toISOString()}
+        >
+          {publishedDateRelativeToNow}
         </time>
       </header>
 
       <div className={styles.content}>
-        {content.map((line) => {
-          if (line.type === "paragraph") {
-            return <p key={line.content}>{line.content}</p>;
-          } else if (line.type === "link") {
+        {content.map((line, index) => {
+          if (line.type === 'paragraph') {
+            return <p key={`content-${index}`}>{line.content}</p>;
+          } else if (line.type === 'link') {
             return (
-              <p key={line.content}>
+              <p key={`content-${index}`}>
                 <a href="#">{line.content}</a>
               </p>
             );
           }
+          return null;
         })}
       </div>
 
